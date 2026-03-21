@@ -140,10 +140,72 @@ def parse_json_if_needed(arguments: str | dict) -> str | dict:
     if isinstance(arguments, dict):
         return arguments
     else:
+        raw_arguments = arguments
+        stripped_arguments = arguments.strip()
+
         try:
-            return json5.loads(arguments)
+            return json5.loads(stripped_arguments)
         except Exception:
-            return arguments
+            # Some OpenAI-compatible models may return a nearly-valid JSON string
+            # for tool arguments (for example, missing the final `}`).
+            repaired_arguments = _repair_json_string(stripped_arguments)
+            if repaired_arguments is not None:
+                try:
+                    return json5.loads(repaired_arguments)
+                except Exception:
+                    pass
+            return raw_arguments
+
+
+def _repair_json_string(raw: str) -> str | None:
+    if not raw:
+        return None
+    if raw[0] not in "{[":
+        return None
+
+    repaired = _append_missing_json_closers(raw)
+    if repaired != raw:
+        return repaired
+    return None
+
+
+def _append_missing_json_closers(raw: str) -> str:
+    stack: list[str] = []
+    in_string: str | None = None
+    escaped = False
+
+    for char in raw:
+        if in_string is not None:
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+                continue
+            if char == in_string:
+                in_string = None
+            continue
+
+        if char == '"' or char == "'":
+            in_string = char
+            continue
+        if char == "{" or char == "[":
+            stack.append(char)
+            continue
+        if char == "}" or char == "]":
+            if not stack:
+                continue
+            last = stack[-1]
+            if (last == "{" and char == "}") or (last == "[" and char == "]"):
+                stack.pop()
+
+    suffix = ""
+    if in_string is not None:
+        suffix += in_string
+    for opener in reversed(stack):
+        suffix += "}" if opener == "{" else "]"
+
+    return raw + suffix
 
 
 @dataclass

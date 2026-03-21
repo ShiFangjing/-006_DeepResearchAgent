@@ -226,7 +226,8 @@ class OpenAIServerModel(ApiModel):
             **kwargs,
         )
 
-        response = await self.client.chat.completions.acreate(**completion_kwargs)
+        # 千问模型是返回体，
+        response = await self.client.chat.completions.create(**completion_kwargs)
 
         self._last_input_token_count = response.usage.prompt_tokens
         self._last_output_token_count = response.usage.completion_tokens

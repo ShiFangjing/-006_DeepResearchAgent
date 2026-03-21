@@ -14,8 +14,8 @@ dataset = dict(
     type="gaia_dataset",
     name="2023_all",
     path="data/GAIA",
-    # split="validation",
-    split="test",
+    split="validation",
+    # split="test",
 )
 
 deep_researcher_agent_config = dict(
@@ -35,6 +35,7 @@ deep_analyzer_agent_config = dict(
     name="deep_analyzer_agent",
     # model_id="claude-3.7-sonnet-thinking",
     model_id="gpt-4o",
+    # model_id="qwen-plus",
     description = "A deep analyzer agent that can perform systematic, step-by-step analysis.",
     max_steps = 3,
     template_path = "src/agent/deep_analyzer_agent/prompts/deep_analyzer_agent.yaml",
@@ -59,6 +60,7 @@ planning_agent_config = dict(
     name="planning_agent",
     # model_id="claude-3.7-sonnet-thinking",
     model_id="gpt-4o",
+    # model_id="qwen-plus",
     description = "A planning agent that can plan the steps to complete the task.",
     max_steps = 20,
     template_path = "src/agent/planning_agent/prompts/planning_agent.yaml",

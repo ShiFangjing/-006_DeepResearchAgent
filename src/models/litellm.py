@@ -219,7 +219,7 @@ class LiteLLMModel(ApiModel):
             **kwargs,
         )
 
-        # Async call to the LiteLLM client for completion
+        # Async call to the LiteLLM client for completion  gpt的✅返回体
         response = await self.client.acompletion(**completion_kwargs)
 
         self._last_input_token_count = response.usage.prompt_tokens

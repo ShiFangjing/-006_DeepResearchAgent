@@ -76,8 +76,11 @@ async def build_agent(config,
                 managed_agent_tools.append(managed_agent_tool)
         logger.info(f"| Managed agents initialized: {', '.join([agent.name for agent in managed_agent_tools])}")
 
-    # Load Model
-    model = model_manager.registed_models[agent_config["model_id"]]
+    # Load Model (trim accidental leading/trailing spaces in config values)
+    model_key = agent_config["model_id"]
+    if isinstance(model_key, str):
+        model_key = model_key.strip()
+    model = model_manager.registed_models[model_key]
 
     # Build Agent
     combined_tools = tools + mcp_tools + managed_agent_tools

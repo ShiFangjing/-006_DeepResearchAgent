@@ -30,8 +30,10 @@ auto_browser_use_tool_config  = dict(
 
 deep_analyzer_tool_config  = dict(
     type="deep_analyzer_tool",
-    analyzer_model_ids = ["gemini-2.5-pro"],
-    summarizer_model_id = "gemini-2.5-pro",
+    # analyzer_model_ids = ["qwen-plus"],
+    # summarizer_model_id = "qwen-plus",
+    analyzer_model_ids = ["gpt-4.1"],
+    summarizer_model_id = "gpt-4.1",
 )
 
 mcp_tools_config = {

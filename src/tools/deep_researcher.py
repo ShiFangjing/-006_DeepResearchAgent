@@ -4,6 +4,7 @@ import re
 import time
 from typing import List, Optional, Set, Tuple
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from tenacity import RetryError
 
 from src.models import model_manager, ChatMessage
 from src.tools.web_searcher import WebSearcherTool, SearchResult
@@ -286,7 +287,14 @@ class DeepResearcherTool(AsyncTool):
                                        deadline=deadline
                                        )
         except Exception as e:
-            res_str = f"DeepResearchTool failed to complete the research cycle: {str(e)}"
+            if isinstance(e, RetryError):
+                root_error = e.last_attempt.exception()
+                res_str = (
+                    "DeepResearchTool failed to complete the research cycle: "
+                    f"{type(root_error).__name__}: {root_error}"
+                )
+            else:
+                res_str = f"DeepResearchTool failed to complete the research cycle: {type(e).__name__}: {e}"
             logger.error(res_str)
             return ToolResult(
                 output=None,

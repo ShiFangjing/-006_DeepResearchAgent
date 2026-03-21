@@ -195,7 +195,7 @@ async def main():
 
     # Load answers
     tasks_to_run = get_tasks_to_run(config.save_path, dataset)
-    tasks_to_run = [task for task in tasks_to_run[:1]]
+    tasks_to_run = [task for task in tasks_to_run[9:10]]
     logger.info(f"| Loaded {len(tasks_to_run)} tasks to run.")
 
     # Run tasks

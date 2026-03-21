@@ -24,6 +24,7 @@ custom_role_conversions = {"tool-call": "assistant", "tool-response": "user"}
 PLACEHOLDER = "PLACEHOLDER"
 
 
+
 class ModelManager(metaclass=Singleton):
     def __init__(self):
         self.registed_models: Dict[str, Any] = {}
@@ -493,7 +494,11 @@ class ModelManager(metaclass=Singleton):
             {
                 "model_name": "Qwen",
                 "model_id": "Qwen",
-            }
+            },
+            {
+                "model_name": "qwen-plus",
+                "model_id": "qwen-plus",
+            },
         ]
         for model in models:
             model_name = model["model_name"]

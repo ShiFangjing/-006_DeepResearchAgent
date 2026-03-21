@@ -1,11 +1,13 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from tenacity import retry, stop_after_attempt, wait_exponential
-import time
+from tenacity import RetryError, retry, stop_after_attempt, wait_exponential
 import asyncio
 
 from src.tools.web_fetcher import WebFetcherTool
 from src.tools.search import (
+    BaiduSearchEngine,
+    BingSearchEngine,
+    DuckDuckGoSearchEngine,
     GoogleSearchEngine,
     FirecrawlSearchEngine,
     WebSearchEngine,
@@ -122,7 +124,7 @@ class WebSearcherTool(AsyncTool):
     def __init__(self,
                  *args,
                  engine: str = "Firecrawl",
-                 fallback_engines=["DuckDuckGo", "Baidu", "Bing"],
+                 fallback_engines=("DuckDuckGo", "Baidu", "Bing", "Google"),
                  max_length: int = 4096,
                  retry_delay: int = 10,
                  max_retries: int = 3,
@@ -149,6 +151,10 @@ class WebSearcherTool(AsyncTool):
 
         self._search_engine: dict[str, WebSearchEngine] = {
             "firecrawl": FirecrawlSearchEngine(),
+            "google": GoogleSearchEngine(),
+            "duckduckgo": DuckDuckGoSearchEngine(),
+            "baidu": BaiduSearchEngine(),
+            "bing": BingSearchEngine(),
         }
         self.content_fetcher: WebFetcherTool = WebFetcherTool()
 
@@ -198,7 +204,7 @@ class WebSearcherTool(AsyncTool):
                 # All engines failed, wait and retry
                 res = f"All search engines failed. Waiting {self.retry_delay} seconds before retry {retry_count + 1}/{self.max_retries}..."
                 logger.warning(res)
-                time.sleep(self.retry_delay)
+                await asyncio.sleep(self.retry_delay)
             else:
                 res = f"All search engines failed after {self.max_retries} retries. Giving up."
                 logger.error(res)
@@ -219,11 +225,24 @@ class WebSearcherTool(AsyncTool):
         for engine_name in engine_order:
             engine = self._search_engine[engine_name]
             logger.info(f"🔎 Attempting search with {engine_name.capitalize()}...")
-            search_items = await self._perform_search_with_engine(
-                engine, query, num_results, search_params
-            )
+            try:
+                search_items = await self._perform_search_with_engine(
+                    engine, query, num_results, search_params
+                )
+            except RetryError as e:
+                root_error = e.last_attempt.exception()
+                failed_engines.append(engine_name)
+                logger.warning(
+                    f"{engine_name.capitalize()} search failed after retries: {type(root_error).__name__}: {root_error}"
+                )
+                continue
+            except Exception as e:
+                failed_engines.append(engine_name)
+                logger.warning(f"{engine_name.capitalize()} search failed: {type(e).__name__}: {e}")
+                continue
 
             if not search_items:
+                failed_engines.append(engine_name)
                 continue
 
             if failed_engines:
