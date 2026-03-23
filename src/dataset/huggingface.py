@@ -1,4 +1,5 @@
 import os
+import re
 import pandas as pd
 import datasets
 import base64
@@ -77,5 +78,48 @@ class HLEDataset():
     def __len__(self):
         return len(self.data)
     
+    def __getitem__(self, index):
+        return self.data.iloc[index]
+
+
+@DATASET.register_module(name="gsm8k_dataset", force=True)
+class GSM8KDataset():
+    def __init__(self, path, name, split):
+        self.path = path
+        self.name = name
+        self.split = split
+
+        if self.name is None:
+            ds = datasets.load_dataset(self.path)[self.split]
+        else:
+            ds = datasets.load_dataset(self.path, self.name)[self.split]
+
+        ds = ds.map(
+            self.preprocess_row,
+            with_indices=True,
+            load_from_cache_file=False,
+            fn_kwargs={"split": split},
+        )
+
+        self.data = pd.DataFrame(ds)
+
+    def preprocess_row(self, row, index, split):
+        answer = str(row.get("answer", "") or "")
+        row["true_answer"] = self.extract_final_answer(answer)
+        row["task_id"] = f"gsm8k-{split}-{index}"
+        row["task"] = "gsm8k"
+        row["file_name"] = ""
+        return row
+
+    @staticmethod
+    def extract_final_answer(answer: str) -> str:
+        match = re.search(r"####\s*([^\n]+)", answer)
+        if match:
+            return match.group(1).strip()
+        return answer.strip()
+
+    def __len__(self):
+        return len(self.data)
+
     def __getitem__(self, index):
         return self.data.iloc[index]

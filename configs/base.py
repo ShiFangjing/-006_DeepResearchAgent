@@ -16,7 +16,7 @@ web_searcher_tool_config = dict(
 
 deep_researcher_tool_config  = dict(
     type="deep_researcher_tool",
-    model_id = "gpt-4.1",
+    model_id = "qwen-plus",
     max_depth = 2,
     max_insights = 20,
     time_limit_seconds = 60,
@@ -32,8 +32,8 @@ deep_analyzer_tool_config  = dict(
     type="deep_analyzer_tool",
     # analyzer_model_ids = ["qwen-plus"],
     # summarizer_model_id = "qwen-plus",
-    analyzer_model_ids = ["gpt-4.1"],
-    summarizer_model_id = "gpt-4.1",
+    analyzer_model_ids = ["qwen-plus"],
+    summarizer_model_id = "qwen-plus",
 )
 
 mcp_tools_config = {
